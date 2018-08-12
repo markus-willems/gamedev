@@ -1,28 +1,45 @@
 {
-	"name": "gamedev",
-	"version": "0.0.1",
-	"description": "Game dev testing repository",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"zip": "node build-utils/zip.js",
-		"clean": "rimraf dist/",
-		"build:dev": "npm run clean && webpack --mode=development",
-		"build:prod": "npm run clean && webpack --mode=production",
-		"build:prod:zip": "npm run clean && webpack --mode=production && npm run zip",
-		"devServer:dev": "webpack-dev-server --mode=development",
-		"devServer:prod": "webpack-dev-server --mode=production"
+    "name": "gamedev",
+    "version": "0.0.1",
+    "description": "Game dev testing repository",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "zip": "node build-utils/zip.js",
+        "format": "prettier --write '**/*.js'",
+        "clean": "rimraf dist/",
+        "build:dev": "npm run clean && webpack --mode=development",
+        "build:prod": "npm run clean && webpack --mode=production",
+        "build:prod:zip": "npm run clean && webpack --mode=production && npm run zip",
+        "devServer:dev": "webpack-dev-server --mode=development",
+		"devServer:prod": "webpack-dev-server --mode=production",
+		"precommit": "lint-staged"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "archiver": "^2.1.1",
+        "babel-cli": "^6.26.0",
+        "babel-loader": "^7.1.5",
+        "babel-preset-env": "^1.7.0",
+        "file-loader": "^1.1.11",
+        "html-webpack-plugin": "^3.2.0",
+        "husky": "^0.14.3",
+        "lint-staged": "^7.2.0",
+        "prettier": "^1.14.2",
+        "rimraf": "^2.6.2",
+        "webpack": "^4.16.5",
+        "webpack-cli": "^3.1.0",
+        "webpack-dev-server": "^3.1.5"
 	},
-	"license": "MIT",
-	"devDependencies": {
-		"archiver": "^2.1.1",
-		"babel-cli": "^6.26.0",
-		"babel-loader": "^7.1.5",
-		"babel-preset-env": "^1.7.0",
-		"file-loader": "^1.1.11",
-		"html-webpack-plugin": "^3.2.0",
-		"rimraf": "^2.6.2",
-		"webpack": "^4.16.5",
-		"webpack-cli": "^3.1.0",
-		"webpack-dev-server": "^3.1.5"
+	"lint-staged": {
+		"linters": {
+			"*.js": [
+				"npm run format",
+				"git add"
+			]
+		},
+		"ignore": [
+			"**/dist/*.*",
+			"**/node_modules/*.*"
+		]
 	}
 }
