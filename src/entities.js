@@ -3,6 +3,10 @@ import { collisionBetween } from './physics';
 import { controls, keyCodes } from './controls';
 import { uuidv4 } from './utils';
 
+const globals = {
+    gravity: 10,
+};
+
 const entities = [];
 
 const water = createEntity(
@@ -50,16 +54,16 @@ const player = createEntity(
                 }
             });
         if (controls.keyDown(keyCodes.RIGHT)) {
-            self.x += 5;
+            self.x += 3;
         }
         if (controls.keyDown(keyCodes.LEFT)) {
-            self.x -= 5;
+            self.x -= 3;
         }
         if (controls.keyDown(keyCodes.UP)) {
-            self.y -= 5;
+            self.y -= 3;
         }
         if (controls.keyDown(keyCodes.DOWN)) {
-            self.y += 5;
+            self.y += 3;
         }
     },
     (self, assets, ctx) => {
@@ -79,10 +83,24 @@ const wall = createEntity(
         name: 'wall',
         x: 300,
         y: 500,
-        width: 70,
-        height: 30,
+        width: 20,
+        height: 20,
+        velocityX: 1,
+        velocityY: 1,
+        isJumping: false,
     },
-    () => {},
+    (self, step, entities) => {
+        self.x += self.velocityX * 0.1;
+        self.y += self.velocityY * 0.1;
+        self.velocityY += globals.gravity * 0.1;
+
+        if (controls.keyDown(keyCodes.SPACE)) {
+            if (!self.isJumping) {
+                self.velocityY = -20;
+                //self.isJumping = true;
+            }
+        }
+    },
     (self, assets, ctx) => {
         ctx.beginPath();
         ctx.rect(self.x, self.y, self.width, self.height);
@@ -93,7 +111,7 @@ const wall = createEntity(
 );
 
 entities.push(water);
-entities.push(player);
 entities.push(wall);
+entities.push(player);
 
 export default entities;
