@@ -1,7 +1,6 @@
 const fs = require('fs');
 const archiver = require('archiver');
 const zipConfig = require('./zip.config');
-const path = require('path');
 
 const output = fs.createWriteStream(`${zipConfig.filename}.zip`);
 var archive = archiver('zip', {

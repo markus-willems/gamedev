@@ -8,9 +8,6 @@ export function init(assets, cb) {
             if (key === 'images') {
                 return createImages(assets[key], IMG_ASSET_PATH);
             }
-            if (key === 'entities') {
-                return processEntities(assets[key]);
-            }
         })
         .reduce((acc, curr) => {
             return acc.concat(...curr);
@@ -23,22 +20,6 @@ export function init(assets, cb) {
             cb(response);
         })
         .catch(error => console.error(error));
-}
-
-function processEntities(entities) {
-    return entities.map(entity => {
-        return new Promise((resolve, reject) => {
-            if (entity.state.id) {
-                resolve({
-                    entity,
-                    name: entity.name,
-                    type: 'entities',
-                });
-            } else {
-                reject(new Error('Entity must have valid `id` prop.'));
-            }
-        });
-    });
 }
 
 function createImages(images, path) {

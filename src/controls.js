@@ -12,11 +12,14 @@ export const controls = {
     keyDown(code) {
         return keys[code];
     },
+    keyUp(code) {
+        return !keys[code];
+    },
     onKeydown(e) {
         keys[e.keyCode] = true;
     },
     onKeyup(e) {
-        keys[e.keyCode] = null;
+        keys[e.keyCode] = false;
     },
 };
 

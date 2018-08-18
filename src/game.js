@@ -4,7 +4,7 @@ import entities from './entities';
 /* Game */
 window.onload = init(
     {
-        images: ['caravel.png', 'water.png'],
+        images: ['c.png'],
     },
     assets => {
         const canvas = document.getElementById('app');

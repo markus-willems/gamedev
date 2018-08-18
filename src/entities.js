@@ -1,98 +1,15 @@
 import { createEntity, getImg } from './lib';
 import { collisionBetween } from './physics';
 import { controls, keyCodes } from './controls';
+import { playSound } from './audio';
 import { uuidv4 } from './utils';
 
 const globals = {
-    gravity: 0.8,
     tileWidth: 32,
     tileHeight: 32,
 };
 
 const entities = [];
-/* 
-const player = createEntity(
-    {
-        id: uuidv4(),
-        name: 'player',
-        x: 100,
-        y: 100,
-        width: 30,
-        height: 60,
-        velocityX: 0,
-        velocityY: 0,
-        isJumping: false,
-    },
-    (self, step, entities) => {
-        self.x = Math.round(self.x + self.velocityX);
-        self.y = Math.round(self.y + self.velocityY);
-        self.velocityY = Math.round(globals.gravity + self.velocityY);
-
-        if (controls.keyDown(keyCodes.SPACE)) {
-            if (!self.isJumping) {
-                self.velocityY = -20;
-                self.isJumping = true;
-            }
-        }
-
-        if (controls.keyDown(keyCodes.LEFT)) {
-            if (!self.isJumping) {
-                if (!self.isJumping) {
-                    self.x -= 4;
-                    self.velocityX = -5;
-                }
-            }
-        }
-
-        if (controls.keyDown(keyCodes.RIGHT)) {
-            if (!self.isJumping) {
-                self.x += 4;
-                self.velocityX = 5;
-            }
-        }
-
-        entities
-            .filter(entity => entity.state.id !== self.id)
-            .forEach(entity => {
-                let { state: other } = entity;
-                if (collisionBetween(self, other)) {
-                    if (other.wall) {
-                        self.y = other.y - self.height;
-                        self.velocityY = 0;
-                        self.velocityX = 0;
-                        self.isJumping = false;
-                    }
-                }
-            });
-    },
-    (self, assets, ctx) => {
-        ctx.beginPath();
-        ctx.rect(self.x, self.y, self.width, self.height);
-        ctx.fillStyle = 'green';
-        ctx.fill();
-        ctx.closePath();
-    }
-);
-
-const ground = createEntity(
-    {
-        id: uuidv4(),
-        height: 30,
-        wall: true,
-    },
-    () => {},
-    (self, assets, ctx, canvasWidth, canvasHeight) => {
-        self.x = 0;
-        self.y = canvasHeight - 200;
-        self.width = canvasWidth;
-        ctx.beginPath();
-        ctx.rect(self.x, self.y, self.width, self.height);
-        ctx.fillStyle = '#FF0000';
-        ctx.fill();
-        ctx.closePath();
-    }
-);
- */
 
 function drawGrid(ctx, width, height, tileWidth, tileHeight) {
     for (let i = 0; i < width / tileWidth; i++) {
@@ -108,34 +25,75 @@ function drawGrid(ctx, width, height, tileWidth, tileHeight) {
     }
 }
 
-function handleMovement(self, type) {
-    if (self.fps % 10 === 0) {
-        if (type === 'up') {
-            self.y -= globals.tileHeight;
-        } else if (type === 'right') {
-            self.x += globals.tileWidth;
-        } else if (type === 'down') {
-            self.y += globals.tileHeight;
+function handleMovement(self, step, type) {
+    self.facing = type;
+    if (type === 'up') {
+        self.y -= self.velocity * step;
+        if (self.fps < 5) {
+            self.ix = 0;
+            self.iy = 0;
+        } else if (self.fps >= 5 && self.fps < 10) {
+            self.ix = 65;
+            self.iy = 49;
         } else {
-            self.x -= globals.tileWidth;
+            self.ix = 97;
+            self.iy = 49;
+        }
+    } else if (type === 'right') {
+        self.x += self.velocity * step;
+        if (self.fps < 5) {
+            self.ix = 65;
+            self.iy = 0;
+        } else if (self.fps >= 5 && self.fps < 10) {
+            self.ix = 0;
+            self.iy = 97;
+        } else {
+            self.ix = 65;
+            self.iy = 0;
+        }
+    } else if (type === 'down') {
+        self.y += self.velocity * step;
+        if (self.fps < 5) {
+            self.ix = 33;
+            self.iy = 0;
+        } else if (self.fps >= 5 && self.fps < 10) {
+            self.ix = 0;
+            self.iy = 49;
+        } else {
+            self.ix = 33;
+            self.iy = 49;
+        }
+    } else {
+        self.x -= self.velocity * step;
+        if (self.fps < 5) {
+            self.ix = 97;
+            self.iy = 0;
+        } else if (self.fps >= 5 && self.fps < 10) {
+            self.ix = 33;
+            self.iy = 97;
+        } else {
+            self.ix = 97;
+            self.iy = 0;
         }
     }
 }
 
 function handleShooting(self) {
-    if (self.fps % 10 === 0) {
+    if (!self.isShooting) {
+        self.isShooting = true;
         let vx = 0;
         let vy = 0;
         if (self.facing === 'up') {
-            vy = -10;
+            vy = -600;
         } else if (self.facing === 'right') {
-            vx = 10;
+            vx = 600;
         } else if (self.facing === 'down') {
-            vy = 10;
+            vy = 600;
         } else {
-            vx = -10;
+            vx = -600;
         }
-        entities.push(bullet(self.x, self.y, vx, vy));
+        playSound('sawtooth', 20, 50);
+        entities.push(bullet(self.x + 30, self.y + 26, vx, vy));
     }
 }
 
@@ -166,15 +124,17 @@ const bullet = (x, y, vx, vy) =>
             velocityY: vy,
             x,
             y,
+            width: 4,
+            height: 4,
         },
-        self => {
-            self.x = Math.round(self.x + self.velocityX);
-            self.y = Math.round(self.y + self.velocityY);
+        (self, step) => {
+            self.x += self.velocityX * step;
+            self.y += self.velocityY * step;
         },
         (self, assets, ctx, canvasWidth, canvasHeight) => {
             ctx.beginPath();
             ctx.fillStyle = 'red';
-            ctx.fillRect(self.x, self.y, 8, 8);
+            ctx.fillRect(self.x, self.y, self.width, self.height);
             ctx.closePath();
         }
     );
@@ -189,48 +149,92 @@ const player = createEntity(
         isMoving: false,
         isShooting: false,
         facing: 'up',
+        velocity: 200,
+        image: 'c.png',
+        ix: 0, // image/sprite sub rect x
+        iy: 0, // image/sprite sub rect y,
         fps: 0,
     },
     (self, step, entities) => {
-        if (self.fps < 60) {
-            self.fps += 1;
-        } else {
-            self.fps = 1;
+        self.fps += 1;
+        if (self.fps > 15) {
+            self.fps = 0;
         }
         if (controls.keyDown(keyCodes.LEFT)) {
-            self.facing = 'left';
-            handleMovement(self, 'left');
+            handleMovement(self, step, 'left');
         }
         if (controls.keyDown(keyCodes.RIGHT)) {
-            self.facing = 'right';
-            handleMovement(self, 'right');
+            handleMovement(self, step, 'right');
         }
         if (controls.keyDown(keyCodes.UP)) {
-            self.facing = 'up';
-            handleMovement(self, 'up');
+            handleMovement(self, step, 'up');
+        }
+        if (controls.keyUp(keyCodes.UP) && self.facing === 'UP') {
+            self.ix = 0;
+            self.iy = 0;
         }
         if (controls.keyDown(keyCodes.DOWN)) {
-            self.facing = 'down';
-            handleMovement(self, 'down');
+            handleMovement(self, step, 'down');
+        }
+        if (controls.keyUp(keyCodes.DOWN) && self.facing === 'down') {
+            self.ix = 33;
+            self.iy = 0;
         }
         if (controls.keyDown(keyCodes.SPACE)) {
             handleShooting(self);
         }
+        if (controls.keyUp(keyCodes.SPACE)) {
+            self.isShooting = false;
+        }
     },
     (self, assets, ctx, canvasWidth, canvasHeight) => {
-        ctx.beginPath();
-        ctx.fillStyle = 'green';
-        ctx.fillRect(
+        ctx.drawImage(
+            getImg(self.image, assets),
+            self.ix,
+            self.iy,
+            self.width,
+            self.height,
             self.x,
-            self.y + (self.height - globals.tileHeight),
+            self.y,
             self.width,
             self.height
         );
+    }
+);
+
+const wall = createEntity(
+    {
+        id: uuidv4(),
+        x: globals.tileWidth * 2,
+        y: globals.tileWidth * 4,
+        width: globals.tileWidth,
+        height: globals.tileHeight,
+    },
+    self => {
+        entities
+            .filter(entity => entity.state.id !== self.id)
+            .forEach(entity => {
+                let { state: other } = entity;
+                if (collisionBetween(self, other)) {
+                    if (other.type === 'bullet') {
+                        self.x = -9999;
+                        self.y = -9999;
+                        other.x = -9999;
+                        other.y = -9999;
+                    }
+                }
+            });
+    },
+    (self, assets, ctx, canvasWidth, canvasHeight) => {
+        ctx.beginPath();
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(self.x, self.y, self.width, self.height);
         ctx.closePath();
     }
 );
 
 entities.push(grid);
 entities.push(player);
+entities.push(wall);
 
 export default entities;
